@@ -17,11 +17,11 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob
 
-from nova.api.openstack.placement import microversion
-from nova.api.openstack.placement import util
-from nova import exception
-from nova.i18n import _
-from nova import objects
+from placement.api import microversion
+from placement.api import util
+#from nova import exception
+from placement.i18n import _
+#from nova import objects
 
 
 POST_RC_SCHEMA_V1_2 = {

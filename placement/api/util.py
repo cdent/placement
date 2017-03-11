@@ -21,8 +21,8 @@ import webob
 
 # NOTE(cdent): avoid cyclical import conflict between util and
 # microversion
-import nova.api.openstack.placement.microversion
-from nova.i18n import _
+import placement.api.microversion
+from placement.i18n import _
 
 
 # NOTE(cdent): This registers a FormatChecker on the jsonschema

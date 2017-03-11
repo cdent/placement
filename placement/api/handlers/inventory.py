@@ -18,11 +18,11 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob
 
-from nova.api.openstack.placement import util
-from nova import db
-from nova import exception
-from nova.i18n import _
-from nova import objects
+from placement.api import util
+from placement import db
+#from nova import exception
+from placement.i18n import _
+#from nova import objects
 
 RESOURCE_CLASS_IDENTIFIER = "^[A-Z0-9_]+$"
 BASE_INVENTORY_SCHEMA = {

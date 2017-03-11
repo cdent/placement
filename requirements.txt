@@ -1,0 +1,12 @@
+jsonschema
+keystonemiddleware
+microversion_parse
+oslo.db
+oslo_i18n
+oslo_middleware
+oslo_policy
+oslo_serialization
+oslo_utils
+routes
+webob
+

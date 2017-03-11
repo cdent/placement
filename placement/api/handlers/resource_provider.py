@@ -20,12 +20,12 @@ from oslo_utils import encodeutils
 from oslo_utils import uuidutils
 import webob
 
-from nova.api.openstack.placement import microversion
-from nova.api.openstack.placement import util
-from nova.api.openstack.placement import wsgi_wrapper
-from nova import exception
-from nova.i18n import _
-from nova import objects
+from placement.api import microversion
+from placement.api import util
+from placement.api import wsgi_wrapper
+#from nova import exception
+from placement.i18n import _
+#from nova import objects
 
 
 POST_RESOURCE_PROVIDER_SCHEMA = {

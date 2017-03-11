@@ -16,12 +16,12 @@ from gabbi import fixture
 from oslo_middleware import cors
 from oslo_utils import uuidutils
 
-from nova.api.openstack.placement import deploy
-from nova import conf
-from nova import config
-from nova import context
-from nova import objects
-from nova.tests import fixtures
+from placement.api import deploy
+from placement import conf
+from placement import config
+#from nova import context
+#from nova import objects
+from placement.tests import fixtures
 
 
 CONF = conf.CONF

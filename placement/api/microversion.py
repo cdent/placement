@@ -24,8 +24,8 @@ import webob
 
 # NOTE(cdent): avoid cyclical import conflict between util and
 # microversion
-import nova.api.openstack.placement.util
-from nova.i18n import _
+import placement.api.util
+from placement.i18n import _
 
 
 SERVICE_TYPE = 'placement'

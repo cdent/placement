@@ -1,0 +1,4 @@
+*.pyc
+.testrepository
+.tox
+placement.egg-info

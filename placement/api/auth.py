@@ -18,7 +18,7 @@ from oslo_middleware import request_id
 import webob.dec
 import webob.exc
 
-from nova import conf
+from placement import conf
 
 
 CONF = conf.CONF

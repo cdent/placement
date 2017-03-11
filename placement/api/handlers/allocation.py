@@ -19,11 +19,11 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob
 
-from nova.api.openstack.placement import util
-from nova.api.openstack.placement import wsgi_wrapper
-from nova import exception
-from nova.i18n import _, _LE
-from nova import objects
+from placement.api import util
+from placement.api import wsgi_wrapper
+#from nova import exception
+from placement.i18n import _, _LE
+#from nova import objects
 
 
 LOG = logging.getLogger(__name__)

@@ -16,7 +16,7 @@ from oslo_utils import encodeutils
 import webob
 
 
-from nova.api.openstack.placement import microversion
+from placement.api import microversion
 
 
 @webob.dec.wsgify

@@ -15,9 +15,9 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob
 
-from nova.api.openstack.placement import microversion
-from nova.api.openstack.placement import util
-from nova import objects
+from placement.api import microversion
+from placement.api import util
+#from nova import objects
 
 
 PUT_AGGREGATES_SCHEMA = {
