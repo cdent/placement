@@ -1,0 +1,3 @@
+[wsgi_scripts]
+placement-api = placement.api.wsgi:init_application
+
