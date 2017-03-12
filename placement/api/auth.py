@@ -61,6 +61,10 @@ class RequestContext(context.RequestContext):
     pass
 
 
+def get_admin_context():
+    return RequestContext(is_admin=True, overwrite=False)
+
+
 class PlacementKeystoneContext(Middleware):
     """Make a request context from keystone headers."""
 

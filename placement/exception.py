@@ -47,8 +47,9 @@ class MaxDBRetriesExceeded(KwException):
     pass
 
 
-class InvalidInventory(Exception):
+class InvalidInventory(KwException):
     pass
+
 
 class InventoryWithResourceClassNotFound(KwException):
     pass

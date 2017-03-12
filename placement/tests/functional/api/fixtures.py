@@ -13,10 +13,10 @@
 import os
 
 from gabbi import fixture
-from oslo_context import context
 from oslo_middleware import cors
 from oslo_utils import uuidutils
 
+from placement.api import auth
 from placement.api import deploy
 from placement import conf
 from placement import config
@@ -81,7 +81,7 @@ class AllocationFixture(APIFixture):
 
     def start_fixture(self):
         super(AllocationFixture, self).start_fixture()
-        self.context = context.get_admin_context()
+        self.context = auth.get_admin_context()
         # Stealing from the super
         rp_name = os.environ['RP_NAME']
         rp_uuid = os.environ['RP_UUID']
