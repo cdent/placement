@@ -36,7 +36,7 @@ from placement.api.handlers import resource_provider
 from placement.api.handlers import root
 from placement.api.handlers import usage
 from placement.api import util
-#from nova import exception
+from placement import exception
 from placement.i18n import _, _LE
 from placement.api import policy
 

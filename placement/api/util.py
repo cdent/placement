@@ -107,7 +107,7 @@ def json_error_formatter(body, status, title, environ):
     # When there is a no microversion in the environment and a 406,
     # microversion parsing failed so we need to include microversion
     # min and max information in the error response.
-    microversion = nova.api.openstack.placement.microversion
+    microversion = placement.api.microversion
     if status_code == 406 and microversion.MICROVERSION_ENVIRON not in environ:
         error_dict['max_version'] = microversion.max_version_string()
         error_dict['min_version'] = microversion.min_version_string()
