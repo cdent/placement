@@ -9,7 +9,21 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+"""Stub out a basic exceptions, mostly used by objects."""
 
 class NotFound(Exception):
-    """Stub out a basic NotFound, used by objects."""
     pass
+
+
+class ResourceProviderInUse(Exception):
+    pass
+
+
+class ResourceClassNotFound(Exception):
+    pass
+
+
+class ObjectActionError(Exception):
+
+    def __init__(self, *args, **kwargs):
+        super(ObjectActionError, self).__init__('object action error')

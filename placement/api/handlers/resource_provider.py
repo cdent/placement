@@ -23,9 +23,9 @@ import webob
 from placement.api import microversion
 from placement.api import util
 from placement.api import wsgi_wrapper
-#from nova import exception
+from placement import exception
 from placement.i18n import _
-#from nova import objects
+from placement import objects
 
 
 POST_RESOURCE_PROVIDER_SCHEMA = {

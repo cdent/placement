@@ -8,6 +8,7 @@ oslo_middleware
 oslo_policy
 oslo_serialization
 oslo_utils
+oslo_versionedobjects
 routes
 webob
 
