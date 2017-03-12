@@ -69,7 +69,7 @@ def deploy(conf, project_name):
     # all see the same contextual information including request id and
     # authentication information.
     for middleware in (microversion_middleware,
-                       fault_wrap,
+                       #fault_wrap,
                        request_log,
                        context_middleware,
                        auth_middleware,

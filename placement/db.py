@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_db.sqlalchemy import enginefacade
+
 # The maximum value a signed INT type may have
 MAX_INT = 0x7FFFFFFF
 
@@ -22,3 +24,31 @@ MAX_INT = 0x7FFFFFFF
 # will round off the value. Nevertheless we may still want to know prior to
 # insert whether the value is oversize or not.
 SQL_SP_FLOAT_MAX = 3.40282e+38
+
+main_context_manager = enginefacade.transaction_context()
+
+
+def _context_manager_from_context(context):
+    if context:
+        try:
+            return context.db_connection
+        except AttributeError:
+            pass
+
+
+def get_context_manager(context):
+    """Get a database context manager object.
+
+    :param context: The request context that can contain a context manager
+    """
+    return _context_manager_from_context(context) or main_context_manager
+
+
+def get_engine(use_slave=False, context=None):
+    """Get a database engine object.
+
+    :param use_slave: Whether to use the slave connection
+    :param context: The request context that can contain a context manager
+    """
+    ctxt_mgr = get_context_manager(context)
+    return ctxt_mgr.get_legacy_facade().get_engine(use_slave=use_slave)

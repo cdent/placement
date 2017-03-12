@@ -1,6 +1,7 @@
 jsonschema
 keystonemiddleware
 microversion_parse
+oslo.context
 oslo.db
 oslo_i18n
 oslo_middleware

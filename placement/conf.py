@@ -12,8 +12,15 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_db import options as oslo_db_options
 
 CONF = cfg.CONF
+
+database_group = cfg.OptGroup('database',
+    title='Database options',
+    help="""
+Database configuration.
+""")
 
 api_group = cfg.OptGroup('api',
     title='API options',
@@ -34,5 +41,6 @@ specified as the username.
 """),
 ]
 
+oslo_db_options.set_defaults(CONF)
 CONF.register_group(api_group)
 CONF.register_opts(auth_opts, group=api_group)

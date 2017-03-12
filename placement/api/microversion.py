@@ -88,7 +88,7 @@ class MicroversionMiddleware(object):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        util = nova.api.openstack.placement.util
+        util = placement.api.util
         try:
             microversion = extract_version(req.headers)
         except ValueError as exc:

@@ -13,13 +13,13 @@
 import os
 
 from gabbi import fixture
+from oslo_context import context
 from oslo_middleware import cors
 from oslo_utils import uuidutils
 
 from placement.api import deploy
 from placement import conf
 from placement import config
-#from nova import context
 #from nova import objects
 from placement.tests import fixtures
 
@@ -52,8 +52,6 @@ class APIFixture(fixture.GabbiFixture):
         # Be explicit about all three database connections to avoid
         # potential conflicts with config on disk.
         self.conf.set_override('connection', "sqlite://", group='database')
-        self.conf.set_override('connection', "sqlite://",
-                               group='api_database')
 
         # Register CORS opts, but do not set config. This has the
         # effect of exercising the "don't use cors" path in
@@ -66,12 +64,7 @@ class APIFixture(fixture.GabbiFixture):
         config.parse_args([], default_config_files=[], configure_db=False,
                           init_rpc=False)
 
-        # NOTE(cdent): api and main database are not used but we still need
-        # to manage them to make the fixtures work correctly and not cause
-        # conflicts with other tests in the same process.
-        self.api_db_fixture = fixtures.Database('api')
         self.main_db_fixture = fixtures.Database('main')
-        self.api_db_fixture.reset()
         self.main_db_fixture.reset()
 
         os.environ['RP_UUID'] = uuidutils.generate_uuid()
@@ -79,7 +72,6 @@ class APIFixture(fixture.GabbiFixture):
         os.environ['CUSTOM_RES_CLASS'] = 'CUSTOM_IRON_NFV'
 
     def stop_fixture(self):
-        self.api_db_fixture.cleanup()
         self.main_db_fixture.cleanup()
         self.output_stream_fixture.cleanUp()
         self.standard_logging_fixture.cleanUp()

@@ -23,8 +23,59 @@ import os
 
 import fixtures
 
+from placement import db as session
 
+
+DB_SCHEMA = {'main': "", 'api': ""}
 _TRUE_VALUES = ('True', 'true', '1', 'yes')
+
+
+class Database(fixtures.Fixture):
+    def __init__(self, database='main', connection=None):
+        """Create a database fixture.
+
+        :param database: The type of database, 'main' or 'api'
+        :param connection: The connection string to use
+        """
+        super(Database, self).__init__()
+        self.database = database
+        if database == 'main':
+            if connection is not None:
+                ctxt_mgr = session.create_context_manager(
+                        connection=connection)
+                facade = ctxt_mgr.get_legacy_facade()
+                self.get_engine = facade.get_engine
+            else:
+                self.get_engine = session.get_engine
+        else:
+            raise RuntimeError('only main database allowed')
+
+    def _cache_schema(self):
+        global DB_SCHEMA
+        if not DB_SCHEMA[self.database]:
+            engine = self.get_engine()
+            conn = engine.connect()
+            # TODO(cdent): put migrations back!
+            #migration.db_sync(database=self.database)
+            DB_SCHEMA[self.database] = "".join(line for line
+                                               in conn.connection.iterdump())
+            engine.dispose()
+
+    def cleanup(self):
+        engine = self.get_engine()
+        engine.dispose()
+
+    def reset(self):
+        self._cache_schema()
+        engine = self.get_engine()
+        engine.dispose()
+        conn = engine.connect()
+        conn.connection.executescript(DB_SCHEMA[self.database])
+
+    def setUp(self):
+        super(Database, self).setUp()
+        self.reset()
+        self.addCleanup(self.cleanup)
 
 
 class NullHandler(std_logging.Handler):

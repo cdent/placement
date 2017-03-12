@@ -31,8 +31,7 @@ def parse_args(argv, default_config_files=None, configure_db=True,
     log.register_options(CONF)
     # We use the oslo.log default log levels which includes suds=INFO
     # and add only the extra levels that Nova needs
-    log.set_defaults(default_log_levels=log.get_default_log_levels() +
-                     extra_default_log_levels)
+    log.set_defaults(default_log_levels=log.get_default_log_levels())
 
     CONF(argv[1:],
          project='placement',
