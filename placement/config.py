@@ -16,9 +16,6 @@
 #    under the License.
 
 from oslo_log import log
-from oslo_utils import importutils
-
-#from nova.db.sqlalchemy import api as sqlalchemy_api
 
 import placement.conf
 
@@ -26,8 +23,7 @@ import placement.conf
 CONF = placement.conf.CONF
 
 
-def parse_args(argv, default_config_files=None, configure_db=True,
-               init_rpc=True):
+def parse_args(argv, default_config_files=None):
     log.register_options(CONF)
     # We use the oslo.log default log levels which includes suds=INFO
     # and add only the extra levels that Nova needs
@@ -36,6 +32,3 @@ def parse_args(argv, default_config_files=None, configure_db=True,
     CONF(argv[1:],
          project='placement',
          default_config_files=default_config_files)
-
-    if configure_db:
-        sqlalchemy_api.configure(CONF)

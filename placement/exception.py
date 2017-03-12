@@ -11,6 +11,7 @@
 #    under the License.
 """Stub out a basic exceptions, mostly used by objects."""
 
+
 class NotFound(Exception):
     pass
 

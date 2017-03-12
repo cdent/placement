@@ -27,9 +27,9 @@ from sqlalchemy.orm import contains_eager
 from sqlalchemy import sql
 
 from placement import db
-from placement import models
-#from nova.db.sqlalchemy import resource_class_cache as rc_cache
+# from nova.db.sqlalchemy import resource_class_cache as rc_cache
 from placement import exception
+from placement import models
 from placement.i18n import _, _LW
 
 
@@ -341,6 +341,8 @@ class ResourceClass(fields.StringField):
 
 class ResourceClassField(fields.AutoTypedField):
     AUTO_TYPE = ResourceClass()
+
+
 class ResourceProvider(base.VersionedObject):
     # Version 1.0: Initial version
     # Version 1.1: Add destroy()
@@ -720,7 +722,7 @@ class ResourceProviderList(base.ObjectListBase, base.VersionedObject):
         _ensure_rc_cache(context)
         resource_providers = cls._get_all_by_filters_from_db(context, filters)
         return base.obj_make_list(context, cls(context),
-                                  objects.ResourceProvider, resource_providers)
+                                  ResourceProvider, resource_providers)
 
 
 class _HasAResourceProvider(base.VersionedObject):
@@ -880,7 +882,7 @@ class InventoryList(base.ObjectListBase, base.VersionedObject):
     def get_all_by_resource_provider_uuid(cls, context, rp_uuid):
         db_inventory_list = cls._get_all_by_resource_provider(context,
                                                               rp_uuid)
-        return base.obj_make_list(context, cls(context), objects.Inventory,
+        return base.obj_make_list(context, cls(context), Inventory,
                                   db_inventory_list)
 
 
@@ -1191,14 +1193,14 @@ class AllocationList(base.ObjectListBase, base.VersionedObject):
         db_allocation_list = cls._get_allocations_from_db(
             context, resource_provider_uuid=rp_uuid)
         return base.obj_make_list(
-            context, cls(context), objects.Allocation, db_allocation_list)
+            context, cls(context), Allocation, db_allocation_list)
 
     @classmethod
     def get_all_by_consumer_id(cls, context, consumer_id):
         db_allocation_list = cls._get_allocations_from_db(
             context, consumer_id=consumer_id)
         return base.obj_make_list(
-            context, cls(context), objects.Allocation, db_allocation_list)
+            context, cls(context), Allocation, db_allocation_list)
 
     def create_all(self):
         """Create the supplied allocations."""
@@ -1473,7 +1475,7 @@ class ResourceClassList(base.ObjectListBase, base.VersionedObject):
     def get_all(cls, context):
         resource_classes = cls._get_all(context)
         return base.obj_make_list(context, cls(context),
-                                  objects.ResourceClass, resource_classes)
+                                  ResourceClass, resource_classes)
 
     def __repr__(self):
         strings = [repr(x) for x in self.objects]

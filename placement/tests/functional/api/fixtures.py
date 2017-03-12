@@ -20,7 +20,7 @@ from oslo_utils import uuidutils
 from placement.api import deploy
 from placement import conf
 from placement import config
-#from nova import objects
+from placement import objects
 from placement.tests import fixtures
 
 
@@ -61,8 +61,7 @@ class APIFixture(fixture.GabbiFixture):
 
         # Make sure default_config_files is an empty list, not None.
         # If None /etc/nova/nova.conf is read and confuses results.
-        config.parse_args([], default_config_files=[], configure_db=False,
-                          init_rpc=False)
+        config.parse_args([], default_config_files=[])
 
         self.main_db_fixture = fixtures.Database('main')
         self.main_db_fixture.reset()

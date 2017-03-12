@@ -15,22 +15,16 @@ from keystonemiddleware import auth_token
 import oslo_middleware
 from oslo_middleware import cors
 
-#from nova.api import openstack as common_api
+# from nova.api import openstack as common_api
 from placement.api import auth
 from placement.api import handler
 from placement.api import microversion
 from placement.api import requestlog
-#from nova import objects
 
 
 # TODO(cdent): NAME points to the config project being used, so for
 # now this is "nova" but we probably want "placement" eventually.
 NAME = "placement"
-
-
-# Make sure that objects are registered for this running of the
-# placement API.
-#objects.register_all()
 
 
 def deploy(conf, project_name):
@@ -55,7 +49,7 @@ def deploy(conf, project_name):
     context_middleware = auth.PlacementKeystoneContext
     req_id_middleware = oslo_middleware.RequestId
     microversion_middleware = microversion.MicroversionMiddleware
-    #fault_wrap = common_api.FaultWrapper
+    # fault_wrap = common_api.FaultWrapper
     request_log = requestlog.RequestLog
 
     application = handler.PlacementHandler()
@@ -69,7 +63,7 @@ def deploy(conf, project_name):
     # all see the same contextual information including request id and
     # authentication information.
     for middleware in (microversion_middleware,
-                       #fault_wrap,
+                       # fault_wrap,
                        request_log,
                        context_middleware,
                        auth_middleware,

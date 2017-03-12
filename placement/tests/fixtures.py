@@ -17,7 +17,6 @@
 """Fixtures for Nova tests."""
 from __future__ import absolute_import
 
-from contextlib import contextmanager
 import logging as std_logging
 import os
 
@@ -56,7 +55,7 @@ class Database(fixtures.Fixture):
             engine = self.get_engine()
             conn = engine.connect()
             # TODO(cdent): put migrations back!
-            #migration.db_sync(database=self.database)
+            # migration.db_sync(database=self.database)
             DB_SCHEMA[self.database] = "".join(line for line
                                                in conn.connection.iterdump())
             engine.dispose()

@@ -13,21 +13,14 @@
 
 
 from oslo_db.sqlalchemy import models
-from sqlalchemy import Boolean
 from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy.dialects.mysql import MEDIUMTEXT
-from sqlalchemy import Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Float
-from sqlalchemy import ForeignKey
 from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import orm
-from sqlalchemy.orm import backref
 from sqlalchemy import schema
 from sqlalchemy import String
-from sqlalchemy import Text
 from sqlalchemy import Unicode
 
 
