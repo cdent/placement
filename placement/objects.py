@@ -845,7 +845,6 @@ class ResourceProviderList(base.ObjectListBase, base.VersionedObject):
                                   ResourceProvider, resource_providers)
 
 
-@base.VersionedObjectRegistry.register
 class _HasAResourceProvider(base.VersionedObject):
     """Code shared between Inventory and Allocation
 
@@ -909,6 +908,7 @@ def _update_inventory_in_db(context, id_, updates):
         raise exception.NotFound()
 
 
+@base.VersionedObjectRegistry.register
 class Inventory(_HasAResourceProvider):
     # Version 1.0: Initial version
     # Version 1.1: Changed resource_class to allow custom strings
@@ -1008,6 +1008,7 @@ class InventoryList(base.ObjectListBase, base.VersionedObject):
                                   db_inventory_list)
 
 
+@base.VersionedObjectRegistry.register
 class Allocation(_HasAResourceProvider):
     # Version 1.0: Initial version
     # Version 1.1: Changed resource_class to allow custom strings
