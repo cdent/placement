@@ -76,7 +76,7 @@ def create_resource_class(req):
     data = util.extract_json(req.body, POST_RC_SCHEMA_V1_2)
 
     try:
-        rc = objects.ResourceClass(context, name=data['name'])
+        rc = objects.ResourceClassObject(context, name=data['name'])
         rc.create()
     except exception.ResourceClassExists:
         raise webob.exc.HTTPConflict(
@@ -107,7 +107,7 @@ def delete_resource_class(req):
     name = util.wsgi_path_item(req.environ, 'name')
     context = req.environ['placement.context']
     # The containing application will catch a not found here.
-    rc = objects.ResourceClass.get_by_name(context, name)
+    rc = objects.ResourceClassObject.get_by_name(context, name)
     try:
         rc.destroy()
     except exception.ResourceClassCannotDeleteStandard as exc:
@@ -137,7 +137,7 @@ def get_resource_class(req):
     name = util.wsgi_path_item(req.environ, 'name')
     context = req.environ['placement.context']
     # The containing application will catch a not found here.
-    rc = objects.ResourceClass.get_by_name(context, name)
+    rc = objects.ResourceClassObject.get_by_name(context, name)
 
     req.response.body = encodeutils.to_utf8(jsonutils.dumps(
         _serialize_resource_class(req.environ, rc))
@@ -181,7 +181,7 @@ def update_resource_class(req):
     data = util.extract_json(req.body, PUT_RC_SCHEMA_V1_2)
 
     # The containing application will catch a not found here.
-    rc = objects.ResourceClass.get_by_name(context, name)
+    rc = objects.ResourceClassObject.get_by_name(context, name)
 
     rc.name = data['name']
 

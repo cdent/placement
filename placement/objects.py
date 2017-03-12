@@ -15,6 +15,7 @@ import copy
 # used over RPC. Remote manipulation is done with the placement HTTP
 # API. The 'remotable' decorators should not be used.
 
+from oslo_concurrency import lockutils
 from oslo_db import exception as db_exc
 from oslo_log import log as logging
 from oslo_utils import versionutils
@@ -39,6 +40,8 @@ _RC_TBL = models.ResourceClass.__table__
 _AGG_TBL = models.PlacementAggregate.__table__
 _RP_AGG_TBL = models.ResourceProviderAggregate.__table__
 _RC_CACHE = None
+_LOCKNAME = 'rc_cache'
+
 
 LOG = logging.getLogger(__name__)
 
@@ -1409,7 +1412,7 @@ class UsageList(base.ObjectListBase, base.VersionedObject):
 
 
 @base.VersionedObjectRegistry.register
-class ResourceClass(base.VersionedObject):
+class ResourceClassObject(base.VersionedObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
@@ -1464,7 +1467,7 @@ class ResourceClass(base.VersionedObject):
         query = context.session.query(func.max(models.ResourceClass.id))
         max_id = query.one()[0]
         if not max_id:
-            return ResourceClass.MIN_CUSTOM_RESOURCE_CLASS_ID
+            return ResourceClassObject.MIN_CUSTOM_RESOURCE_CLASS_ID
         else:
             return max_id + 1
 
@@ -1475,7 +1478,7 @@ class ResourceClass(base.VersionedObject):
         if 'name' not in self:
             raise exception.ObjectActionError(action='create',
                                               reason='name is required')
-        if self.name in fields.ResourceClass.STANDARD:
+        if self.name in ResourceClass.STANDARD:
             raise exception.ResourceClassExists(resource_class=self.name)
 
         if not self.name.startswith(self.CUSTOM_NAMESPACE):
@@ -1516,7 +1519,7 @@ class ResourceClass(base.VersionedObject):
     @staticmethod
     @db.main_context_manager.writer
     def _create_in_db(context, updates):
-        next_id = ResourceClass._get_next_id(context)
+        next_id = ResourceClassObject._get_next_id(context)
         rc = models.ResourceClass()
         rc.update(updates)
         rc.id = next_id
@@ -1585,7 +1588,7 @@ class ResourceClassList(base.ObjectListBase, base.VersionedObject):
     VERSION = '1.1'
 
     fields = {
-        'objects': fields.ListOfObjectsField('ResourceClass'),
+        'objects': fields.ListOfObjectsField('ResourceClassObject'),
     }
 
     @staticmethod
@@ -1599,7 +1602,7 @@ class ResourceClassList(base.ObjectListBase, base.VersionedObject):
     def get_all(cls, context):
         resource_classes = cls._get_all(context)
         return base.obj_make_list(context, cls(context),
-                                  ResourceClass, resource_classes)
+                                  ResourceClassObject, resource_classes)
 
     def __repr__(self):
         strings = [repr(x) for x in self.objects]

@@ -12,7 +12,14 @@
 """Stub out a basic exceptions, mostly used by objects."""
 
 
-class NotFound(Exception):
+class KwException(Exception):
+    def __init__(self, *args, **kwargs):
+        kwargs = kwargs or {}
+        super(KwException, self).__init__(
+            '%s: %s' % (self.__class__.__name__, str(kwargs)))
+
+
+class NotFound(KwException):
     pass
 
 
@@ -20,8 +27,41 @@ class ResourceProviderInUse(Exception):
     pass
 
 
-class ResourceClassNotFound(Exception):
+class ResourceClassExists(KwException):
     pass
+
+
+class ResourceClassNotFound(NotFound):
+    pass
+
+
+class ResourceClassCannotDeleteStandard(KwException):
+    pass
+
+
+class ConcurrentUpdateDetected(Exception):
+    pass
+
+
+class MaxDBRetriesExceeded(KwException):
+    pass
+
+
+class InvalidInventory(Exception):
+    pass
+
+class InventoryWithResourceClassNotFound(KwException):
+    pass
+
+
+class InventoryInUse(Exception):
+    pass
+
+
+class InvalidInventoryCapacity(Exception):
+    def __init__(self, *args, **kwargs):
+        super(InvalidInventoryCapacity, self).__init__(
+            'invalid inv cap: %s' % str(kwargs))
 
 
 class ObjectActionError(Exception):
