@@ -20,9 +20,9 @@ import webob
 
 from placement.api import util
 from placement import db
-#from nova import exception
+from placement import exception
 from placement.i18n import _
-#from nova import objects
+from placement import objects
 
 RESOURCE_CLASS_IDENTIFIER = "^[A-Z0-9_]+$"
 BASE_INVENTORY_SCHEMA = {

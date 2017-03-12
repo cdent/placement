@@ -19,9 +19,9 @@ import webob
 
 from placement.api import microversion
 from placement.api import util
-#from nova import exception
+from placement import exception
 from placement.i18n import _
-#from nova import objects
+from placement import objects
 
 
 POST_RC_SCHEMA_V1_2 = {

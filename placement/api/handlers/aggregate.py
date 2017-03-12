@@ -17,7 +17,7 @@ import webob
 
 from placement.api import microversion
 from placement.api import util
-#from nova import objects
+from placement import objects
 
 
 PUT_AGGREGATES_SCHEMA = {
