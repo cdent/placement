@@ -29,7 +29,7 @@ from sqlalchemy import sql
 from placement import db
 # from nova.db.sqlalchemy import resource_class_cache as rc_cache
 from placement import exception
-from placement import models
+from placement.db import models
 from placement.i18n import _, _LW
 
 

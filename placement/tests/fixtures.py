@@ -23,9 +23,10 @@ import os
 import fixtures
 
 from placement import db as session
+from placement.db import migration
 
 
-DB_SCHEMA = {'main': "", 'api': ""}
+DB_SCHEMA = {'main': ""}
 _TRUE_VALUES = ('True', 'true', '1', 'yes')
 
 
@@ -55,7 +56,7 @@ class Database(fixtures.Fixture):
             engine = self.get_engine()
             conn = engine.connect()
             # TODO(cdent): put migrations back!
-            # migration.db_sync(database=self.database)
+            migration.db_sync(database=self.database)
             DB_SCHEMA[self.database] = "".join(line for line
                                                in conn.connection.iterdump())
             engine.dispose()

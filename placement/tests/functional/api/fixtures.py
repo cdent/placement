@@ -49,8 +49,6 @@ class APIFixture(fixture.GabbiFixture):
 
         self.conf = CONF
         self.conf.set_override('auth_strategy', 'noauth2', group='api')
-        # Be explicit about all three database connections to avoid
-        # potential conflicts with config on disk.
         self.conf.set_override('connection', "sqlite://", group='database')
 
         # Register CORS opts, but do not set config. This has the
@@ -60,7 +58,7 @@ class APIFixture(fixture.GabbiFixture):
         self.conf.register_opts(cors.CORS_OPTS, 'cors')
 
         # Make sure default_config_files is an empty list, not None.
-        # If None /etc/nova/nova.conf is read and confuses results.
+        # If None /etc/placement/placement.conf is read and confuses results.
         config.parse_args([], default_config_files=[])
 
         self.main_db_fixture = fixtures.Database('main')
