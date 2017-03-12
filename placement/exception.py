@@ -27,4 +27,5 @@ class ResourceClassNotFound(Exception):
 class ObjectActionError(Exception):
 
     def __init__(self, *args, **kwargs):
-        super(ObjectActionError, self).__init__('object action error')
+        super(ObjectActionError, self).__init__(
+            'object action error: %s' % str(kwargs))

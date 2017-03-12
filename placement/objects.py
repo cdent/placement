@@ -27,7 +27,6 @@ from sqlalchemy.orm import contains_eager
 from sqlalchemy import sql
 
 from placement import db
-# from nova.db.sqlalchemy import resource_class_cache as rc_cache
 from placement import exception
 from placement.db import models
 from placement.i18n import _, _LW
@@ -44,6 +43,153 @@ _RC_CACHE = None
 LOG = logging.getLogger(__name__)
 
 
+class ResourceClass(fields.StringField):
+    """Classes of resources provided to consumers."""
+
+    VCPU = 'VCPU'
+    MEMORY_MB = 'MEMORY_MB'
+    DISK_GB = 'DISK_GB'
+    PCI_DEVICE = 'PCI_DEVICE'
+    SRIOV_NET_VF = 'SRIOV_NET_VF'
+    NUMA_SOCKET = 'NUMA_SOCKET'
+    NUMA_CORE = 'NUMA_CORE'
+    NUMA_THREAD = 'NUMA_THREAD'
+    NUMA_MEMORY_MB = 'NUMA_MEMORY_MB'
+    IPV4_ADDRESS = 'IPV4_ADDRESS'
+
+    # The ordering here is relevant. If you must add a value, only
+    # append.
+    STANDARD = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
+                NUMA_SOCKET, NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB,
+                IPV4_ADDRESS)
+
+    # This is the set of standard resource classes that existed before
+    # we opened up for custom resource classes in version 1.1 of various
+    # objects in nova/objects/resource_provider.py
+    V1_0 = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF, NUMA_SOCKET,
+            NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB, IPV4_ADDRESS)
+
+
+class ResourceClassField(fields.AutoTypedField):
+    AUTO_TYPE = ResourceClass()
+
+
+def raise_if_custom_resource_class_pre_v1_1(rc):
+    """Raises ValueError if the supplied resource class identifier is
+    *not* in the set of standard resource classes as of Inventory/Allocation
+    object version 1.1
+
+    param rc: Integer or string identifier for a resource class
+    """
+    if isinstance(rc, six.string_types):
+        if rc not in ResourceClass.V1_0:
+            raise ValueError
+    else:
+        try:
+            ResourceClass.V1_0[rc]
+        except IndexError:
+            raise ValueError
+
+
+@db.main_context_manager.reader
+def _refresh_from_db(ctx, cache):
+    """Grabs all custom resource classes from the DB table and populates the
+    supplied cache object's internal integer and string identifier dicts.
+
+    :param cache: ResourceClassCache object to refresh.
+    """
+    with db.main_context_manager.reader.connection.using(ctx) as conn:
+        sel = sa.select([_RC_TBL.c.id, _RC_TBL.c.name])
+        res = conn.execute(sel).fetchall()
+        cache.id_cache = {r[1]: r[0] for r in res}
+        cache.str_cache = {r[0]: r[1] for r in res}
+
+
+class ResourceClassCache(object):
+    """A cache of integer and string lookup values for resource classes."""
+
+    # List of dict of all standard resource classes, where every list item
+    # have a form {'id': <ID>, 'name': <NAME>}
+    STANDARDS = [{'id': ResourceClass.STANDARD.index(s), 'name': s}
+                 for s in ResourceClass.STANDARD]
+
+    def __init__(self, ctx):
+        """Initialize the cache of resource class identifiers.
+
+        :param ctx: `nova.context.RequestContext` from which we can grab a
+                    `SQLAlchemy.Connection` object to use for any DB lookups.
+        """
+        self.ctx = ctx
+        self.id_cache = {}
+        self.str_cache = {}
+
+    def clear(self):
+        with lockutils.lock(_LOCKNAME):
+            self.id_cache = {}
+            self.str_cache = {}
+
+    def id_from_string(self, rc_str):
+        """Given a string representation of a resource class -- e.g. "DISK_GB"
+        or "IRON_SILVER" -- return the integer code for the resource class. For
+        standard resource classes, this integer code will match the list of
+        resource classes on the ResourceClass field type. Other custom
+        resource classes will cause a DB lookup into the resource_classes
+        table, however the results of these DB lookups are cached since the
+        lookups are so frequent.
+
+        :param rc_str: The string representation of the resource class to look
+                       up a numeric identifier for.
+        :returns integer identifier for the resource class, or None, if no such
+                 resource class was found in the list of standard resource
+                 classes or the resource_classes database table.
+        :raises `exception.ResourceClassNotFound` if rc_str cannot be found in
+                either the standard classes or the DB.
+        """
+        # First check the standard resource classes
+        if rc_str in ResourceClass.STANDARD:
+            return ResourceClass.STANDARD.index(rc_str)
+
+        with lockutils.lock(_LOCKNAME):
+            if rc_str in self.id_cache:
+                return self.id_cache[rc_str]
+            # Otherwise, check the database table
+            _refresh_from_db(self.ctx, self)
+            if rc_str in self.id_cache:
+                return self.id_cache[rc_str]
+            raise exception.ResourceClassNotFound(resource_class=rc_str)
+
+    def string_from_id(self, rc_id):
+        """The reverse of the id_from_string() method. Given a supplied numeric
+        identifier for a resource class, we look up the corresponding string
+        representation, either in the list of standard resource classes or via
+        a DB lookup. The results of these DB lookups are cached since the
+        lookups are so frequent.
+
+        :param rc_id: The numeric representation of the resource class to look
+                      up a string identifier for.
+        :returns string identifier for the resource class, or None, if no such
+                 resource class was found in the list of standard resource
+                 classes or the resource_classes database table.
+        :raises `exception.ResourceClassNotFound` if rc_id cannot be found in
+                either the standard classes or the DB.
+        """
+        # First check the ResourceClass.STANDARD values
+        try:
+            return ResourceClass.STANDARD[rc_id]
+        except IndexError:
+            pass
+
+        with lockutils.lock(_LOCKNAME):
+            if rc_id in self.str_cache:
+                return self.str_cache[rc_id]
+
+            # Otherwise, check the database table
+            _refresh_from_db(self.ctx, self)
+            if rc_id in self.str_cache:
+                return self.str_cache[rc_id]
+            raise exception.ResourceClassNotFound(resource_class=rc_id)
+
+
 @db.main_context_manager.reader
 def _ensure_rc_cache(ctx):
     """Ensures that a singleton resource class cache has been created in the
@@ -55,7 +201,7 @@ def _ensure_rc_cache(ctx):
     global _RC_CACHE
     if _RC_CACHE is not None:
         return
-    _RC_CACHE = rc_cache.ResourceClassCache(ctx)
+    _RC_CACHE = ResourceClassCache(ctx)
 
 
 def _get_current_inventory_resources(conn, rp):
@@ -312,37 +458,7 @@ def _set_inventory(context, rp, inv_list):
     return exceeded
 
 
-class ResourceClass(fields.StringField):
-    """Classes of resources provided to consumers."""
-
-    VCPU = 'VCPU'
-    MEMORY_MB = 'MEMORY_MB'
-    DISK_GB = 'DISK_GB'
-    PCI_DEVICE = 'PCI_DEVICE'
-    SRIOV_NET_VF = 'SRIOV_NET_VF'
-    NUMA_SOCKET = 'NUMA_SOCKET'
-    NUMA_CORE = 'NUMA_CORE'
-    NUMA_THREAD = 'NUMA_THREAD'
-    NUMA_MEMORY_MB = 'NUMA_MEMORY_MB'
-    IPV4_ADDRESS = 'IPV4_ADDRESS'
-
-    # The ordering here is relevant. If you must add a value, only
-    # append.
-    STANDARD = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
-                NUMA_SOCKET, NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB,
-                IPV4_ADDRESS)
-
-    # This is the set of standard resource classes that existed before
-    # we opened up for custom resource classes in version 1.1 of various
-    # objects in nova/objects/resource_provider.py
-    V1_0 = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF, NUMA_SOCKET,
-            NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB, IPV4_ADDRESS)
-
-
-class ResourceClassField(fields.AutoTypedField):
-    AUTO_TYPE = ResourceClass()
-
-
+@base.VersionedObjectRegistry.register
 class ResourceProvider(base.VersionedObject):
     # Version 1.0: Initial version
     # Version 1.1: Add destroy()
@@ -563,6 +679,7 @@ class ResourceProvider(base.VersionedObject):
             conn.execute(insert_aggregates)
 
 
+@base.VersionedObjectRegistry.register
 class ResourceProviderList(base.ObjectListBase, base.VersionedObject):
     # Version 1.0: Initial Version
     # Version 1.1: Turn off remotable
@@ -725,6 +842,7 @@ class ResourceProviderList(base.ObjectListBase, base.VersionedObject):
                                   ResourceProvider, resource_providers)
 
 
+@base.VersionedObjectRegistry.register
 class _HasAResourceProvider(base.VersionedObject):
     """Code shared between Inventory and Allocation
 
@@ -811,7 +929,7 @@ class Inventory(_HasAResourceProvider):
         target_version = versionutils.convert_version_to_tuple(target_version)
         if target_version < (1, 1) and 'resource_class' in primitive:
             rc = primitive['resource_class']
-            rc_cache.raise_if_custom_resource_class_pre_v1_1(rc)
+            raise_if_custom_resource_class_pre_v1_1(rc)
 
     @property
     def capacity(self):
@@ -845,6 +963,7 @@ class Inventory(_HasAResourceProvider):
         return _update_inventory_in_db(context, id_, updates)
 
 
+@base.VersionedObjectRegistry.register
 class InventoryList(base.ObjectListBase, base.VersionedObject):
     # Version 1.0: Initial Version
     # Version 1.1: Turn off remotable
@@ -905,7 +1024,7 @@ class Allocation(_HasAResourceProvider):
         target_version = versionutils.convert_version_to_tuple(target_version)
         if target_version < (1, 1) and 'resource_class' in primitive:
             rc = primitive['resource_class']
-            rc_cache.raise_if_custom_resource_class_pre_v1_1(rc)
+            raise_if_custom_resource_class_pre_v1_1(rc)
 
     @staticmethod
     @db.main_context_manager.writer
@@ -1103,6 +1222,7 @@ def _check_capacity_exceeded(conn, allocs):
     return list(res_providers.values())
 
 
+@base.VersionedObjectRegistry.register
 class AllocationList(base.ObjectListBase, base.VersionedObject):
     # Version 1.0: Initial Version
     # Version 1.1: Add create_all() and delete_all()
@@ -1216,6 +1336,7 @@ class AllocationList(base.ObjectListBase, base.VersionedObject):
         return "AllocationList[" + ", ".join(strings) + "]"
 
 
+@base.VersionedObjectRegistry.register
 class Usage(base.VersionedObject):
     # Version 1.0: Initial version
     # Version 1.1: Changed resource_class to allow custom strings
@@ -1231,7 +1352,7 @@ class Usage(base.VersionedObject):
         target_version = versionutils.convert_version_to_tuple(target_version)
         if target_version < (1, 1) and 'resource_class' in primitive:
             rc = primitive['resource_class']
-            rc_cache.raise_if_custom_resource_class_pre_v1_1(rc)
+            raise_if_custom_resource_class_pre_v1_1(rc)
 
     @staticmethod
     def _from_db_object(context, target, source):
@@ -1248,6 +1369,7 @@ class Usage(base.VersionedObject):
         return target
 
 
+@base.VersionedObjectRegistry.register
 class UsageList(base.ObjectListBase, base.VersionedObject):
     # Version 1.0: Initial version
     # Version 1.1: Turn off remotable
@@ -1286,6 +1408,7 @@ class UsageList(base.ObjectListBase, base.VersionedObject):
         return "UsageList[" + ", ".join(strings) + "]"
 
 
+@base.VersionedObjectRegistry.register
 class ResourceClass(base.VersionedObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
@@ -1455,6 +1578,7 @@ class ResourceClass(base.VersionedObject):
             raise exception.ResourceClassExists(resource_class=name)
 
 
+@base.VersionedObjectRegistry.register
 class ResourceClassList(base.ObjectListBase, base.VersionedObject):
     # Version 1.0: Initial version
     # Version 1.1: Turn off remotable
